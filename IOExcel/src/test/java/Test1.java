@@ -1,6 +1,12 @@
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
+/***
+ * @author Bailibo
+ * @time 21/12/29
+ * 基本数据导入导出Test
+ */
+
 public class Test1 {
     public static void main(String[] args) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
 
@@ -9,8 +15,15 @@ public class Test1 {
 
         List<Object[]> list = ep.inputExcel();
 
-        SolveClass<User> sc = new SolveClass<User>();
+        ep.outputExcel("C:\\Users\\Administrator\\Desktop\\out.xlsx",list);
 
-        sc.toCommon(list);
+
+//        for(Object[] obj:list){
+//            for(Object a:obj){
+//                System.out.println(a);
+//            }
+//        }
+
+
     }
 }

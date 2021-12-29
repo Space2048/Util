@@ -1,10 +1,13 @@
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -16,11 +19,21 @@ import java.util.List;
  * @time 21/12/28
  */
 public class ExcelParsingImpl implements ExcelParsing{
-
+    /**
+     * Excel文件位置
+     */
     private String addr = null;
-    private List<String[]> list = null; //数据
+    /**
+     * 需要导入的数据
+     */
+    private List<Object[]> list = null; //数据
 
-    ExcelParsingImpl(String Exceladdr, List<String[]> list){
+    /**
+     * Excel 导出位置
+     */
+    private String outAddr;
+
+    ExcelParsingImpl(String Exceladdr, List<Object[]> list){
         this.addr = Exceladdr;
         this.list = list;
     }
@@ -34,21 +47,44 @@ public class ExcelParsingImpl implements ExcelParsing{
      * @return 导出结果 true 成功 | false 失败
      */
     @Override
-    public Boolean outputExcel(){
+    public Boolean outputExcel(String configdir,List<Object[]> list){
         if(null == list){     //数据为空导出失败
             System.out.println("Excel导出失败,数据为空");
             return false;
         }
 
-        if(null == addr || "".equals(addr)){
-            FileSystemView fsv = FileSystemView.getFileSystemView();
-            System.out.println(fsv.getHomeDirectory());;
-        }
-        /**
-         * 没数据 ---- 先编写导入
+        /**Spring 使用
+         *
          */
+//        @Value("${ExcelTool.output.dir}")
+//        String configdir;
+
+        /**
+         * 创建表结构设置数据
+         */
+        XSSFWorkbook book = new XSSFWorkbook();
+        XSSFSheet sheet = book.createSheet("sheet1");
+        for (int row = 0; row < list.size(); row++) {
+            XSSFRow sheetRow = sheet.createRow(row);
+            for (int col = 0; col < list.get(0).length; col++) {
+                sheetRow.createCell(col).setCellValue(String.valueOf(list.get(row)[col]));
+            }
+        }
+
+        /***
+         * 写入文件
+         */
+        try{
+            book.write(new FileOutputStream(configdir));
+            book.close();
+        }catch (Exception e){
+            System.out.println(e);
+        }
+
         return true;
     }
+
+
 
     /***
      * 导入Excel数据
@@ -59,13 +95,17 @@ public class ExcelParsingImpl implements ExcelParsing{
 
         try{
             File excel = new File(addr);
-            if(excel.isFile() && excel.exists()){   //判断文件是否存在
+            /**判断文件是否存在
+             *
+             */
+            if(excel.isFile() && excel.exists()){
                 String[] split = excel.getName().split("\\.");
                 Workbook workbook;
 
-                /***
-                 * 判断文件类型
+                /**判断文件类型
+                 *
                  */
+
                 if("xls".equals(split[1])){
                     FileInputStream fis = new FileInputStream(excel);
                     workbook = new HSSFWorkbook(fis);
@@ -94,7 +134,7 @@ public class ExcelParsingImpl implements ExcelParsing{
                 List<Object[]> list = new ArrayList<Object[]>(sheet.getLastRowNum());
 
                 for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-                    Object[] objArray = new Object[sheet.getLastRowNum()];
+                    Object[] objArray = new Object[row.getLastCellNum()];
                     row = sheet.getRow(i);
                     for (int j = 0; j < objArray.length; j++) {
                         Cell cell = row.getCell(j);
@@ -120,9 +160,9 @@ public class ExcelParsingImpl implements ExcelParsing{
     /***
      * 获取单元格数据
      * Ruoyi框架源码
-     * @param row
-     * @param column
-     * @return
+     * @param row 获取数据的行
+     * @param column 数据列数
+     * @return object对象
      */
     private Object getCellValue(Row row, int column)
     {
