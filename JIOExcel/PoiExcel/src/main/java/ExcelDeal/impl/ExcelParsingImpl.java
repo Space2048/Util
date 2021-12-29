@@ -1,10 +1,13 @@
+package ExcelDeal.impl;
+
+import ExcelDeal.ExcelParsing;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import ExcelDeal.ExcelParsing;
 
-import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -18,7 +21,7 @@ import java.util.List;
  * @author Space2048
  * @time 21/12/28
  */
-public class ExcelParsingImpl implements ExcelParsing{
+public class ExcelParsingImpl implements ExcelParsing {
     /**
      * Excel文件位置
      */
@@ -29,7 +32,7 @@ public class ExcelParsingImpl implements ExcelParsing{
     private List<Object[]> list = null; //数据
 
     /**
-     * Excel 导出位置
+     * ExcelDeal.impl.Excel 导出位置
      */
     private String outAddr;
 
@@ -38,7 +41,7 @@ public class ExcelParsingImpl implements ExcelParsing{
         this.list = list;
     }
 
-    ExcelParsingImpl(String Exceladdr){
+    public ExcelParsingImpl(String Exceladdr){
         this.addr = Exceladdr;
     }
 
@@ -181,7 +184,7 @@ public class ExcelParsingImpl implements ExcelParsing{
                     val = cell.getNumericCellValue();
                     if (DateUtil.isCellDateFormatted(cell))
                     {
-                        val = DateUtil.getJavaDate((Double) val); // POI Excel 日期格式转换
+                        val = DateUtil.getJavaDate((Double) val); // POI ExcelDeal.impl.Excel 日期格式转换
                     }
                     else
                     {

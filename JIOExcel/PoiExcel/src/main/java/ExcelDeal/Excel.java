@@ -1,10 +1,12 @@
+package ExcelDeal;
+
 /**
- * Excel 类，保存Excel基本信息
+ * ExcelDeal.impl.Excel 类，保存Excel基本信息
  * 只支持 文件中有一个sheet
  */
 public class Excel {
     /**
-     * Excel 文件地址
+     * ExcelDeal.impl.Excel 文件地址
      */
     String addr;
     /**

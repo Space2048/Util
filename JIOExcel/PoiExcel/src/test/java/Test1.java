@@ -1,3 +1,5 @@
+import ExcelDeal.impl.ExcelParsingImpl;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
@@ -15,7 +17,7 @@ public class Test1 {
 
         List<Object[]> list = ep.inputExcel();
 
-        ep.outputExcel("C:\\Users\\Administrator\\Desktop\\out.xlsx",list);
+        ep.outputExcel("C:\\Users\\Administrator\\Desktop\\out2.xlsx",list);
 
 
 //        for(Object[] obj:list){
