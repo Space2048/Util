@@ -1,3 +1,5 @@
+import ExcelDeal.SolveClass;
+import ExcelDeal.User;
 import ExcelDeal.impl.ExcelParsingImpl;
 
 import java.lang.reflect.InvocationTargetException;
@@ -17,7 +19,13 @@ public class Test1 {
 
         List<Object[]> list = ep.inputExcel();
 
-        ep.outputExcel("C:\\Users\\Administrator\\Desktop\\out2.xlsx",list);
+        SolveClass<User> sc = new SolveClass<User>(User.class);
+        List<User> users = sc.toCommon(list);
+
+
+        for (User user: users){
+            System.out.println(user.toString());
+        }
 
 
 //        for(Object[] obj:list){

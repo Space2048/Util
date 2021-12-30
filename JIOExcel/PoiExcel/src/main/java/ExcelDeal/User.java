@@ -75,4 +75,15 @@ public class User {
     public void setUserWork(String userWork) {
         this.userWork = userWork;
     }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "userId=" + userId +
+                ", userName='" + userName + '\'' +
+                ", userAge=" + userAge +
+                ", userBirth=" + userBirth +
+                ", userWork='" + userWork + '\'' +
+                '}';
+    }
 }
