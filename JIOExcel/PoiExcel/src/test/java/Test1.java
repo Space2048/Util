@@ -2,8 +2,12 @@ import ExcelDeal.SolveClass;
 import ExcelDeal.User;
 import ExcelDeal.impl.ExcelParsingImpl;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Timer;
 
 /***
  * @author Bailibo
@@ -22,17 +26,22 @@ public class Test1 {
         SolveClass<User> sc = new SolveClass<User>(User.class);
         List<User> users = sc.toCommon(list);
 
-
+        //导入测试
         for (User user: users){
             System.out.println(user.toString());
         }
 
+        Field[] fields = User.class.getDeclaredFields();
+        List<Object[]> outList = new ArrayList<Object[]>(users.size());
+        //导出测试
+        for (User user:users) {
+            outList.add(sc.toObectArray(user));
+        }
 
-//        for(Object[] obj:list){
-//            for(Object a:obj){
-//                System.out.println(a);
-//            }
-//        }
+        Long time = new Date().getTime();
+        String filename = "C:\\Users\\Administrator\\Desktop\\"+String.valueOf(time)+".xlsx";
+        ep.outputExcel(filename,outList);
+        
 
 
     }

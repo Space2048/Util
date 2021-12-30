@@ -56,5 +56,20 @@ public class SolveClass<T> {
         return resultList;
     }
 
+    /***
+     * 把实体对象属性值变为Object类型，然后存入Object[]数字中
+     * @author Bailibo
+     * @time 21/12/30
+     */
+    public Object[] toObectArray(T unKnowobj) throws IllegalAccessException {
+        Field[] fields = clazz.getDeclaredFields();
+        Object[] objList = new Object[fields.length];
+        for (int i = 0; i < fields.length; i++) {
+
+            objList[i] = fields[i].get(unKnowobj);
+
+        }
+        return objList;
+    }
 
 }
