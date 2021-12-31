@@ -1,7 +1,5 @@
 package ExcelDeal;
 
-import ExcelDeal.impl.InExcel;
-
 import java.util.Date;
 
 @OutExcel(outAddr = "C:\\Users\\Administrator\\Desktop",fileName = "Testannotation")
