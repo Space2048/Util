@@ -20,8 +20,13 @@ import java.util.List;
  * Excel导入导出类
  * @author Space2048
  * @time 21/12/28
+ *
+ * @ReviseTime ime 21/12/30
+ * @ReviseAuthor Bailibo
+ * @ReviseContent 导出类增加注解判断
+ *
  */
-public class ExcelParsingImpl implements ExcelParsing {
+public class ExcelParsingImpl {
     /**
      * Excel文件位置
      */
@@ -36,6 +41,7 @@ public class ExcelParsingImpl implements ExcelParsing {
      */
     private String outAddr;
 
+
     ExcelParsingImpl(String Exceladdr, List<Object[]> list){
         this.addr = Exceladdr;
         this.list = list;
@@ -49,12 +55,13 @@ public class ExcelParsingImpl implements ExcelParsing {
      * 导出Excel数据
      * @return 导出结果 true 成功 | false 失败
      */
-    @Override
-    public Boolean outputExcel(String configdir,List<Object[]> list){
+    public Boolean outputExcel(List<Object[]> list){
+        String configdir = "";
         if(null == list){     //数据为空导出失败
             System.out.println("Excel导出失败,数据为空");
             return false;
         }
+
 
         /**Spring 使用
          *
@@ -93,7 +100,6 @@ public class ExcelParsingImpl implements ExcelParsing {
      * 导入Excel数据
      * @return 导入结果 true 成功 | false 失败
      */
-    @Override
     public List<Object[]> inputExcel(){
 
         try{

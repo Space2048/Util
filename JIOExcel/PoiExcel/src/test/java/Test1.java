@@ -40,7 +40,7 @@ public class Test1 {
 
         Long time = new Date().getTime();
         String filename = "C:\\Users\\Administrator\\Desktop\\"+String.valueOf(time)+".xlsx";
-        ep.outputExcel(filename,outList);
+        ep.outputExcel(outList);
         
 
 

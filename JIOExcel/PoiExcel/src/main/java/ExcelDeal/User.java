@@ -1,7 +1,11 @@
 package ExcelDeal;
 
+import ExcelDeal.impl.InExcel;
+
 import java.util.Date;
 
+@OutExcel(outAddr = "C:\\Users\\Administrator\\Desktop",fileName = "Testannotation")
+@InExcel(fileAddr = "C:\\Users\\Administrator\\Desktop\\Test",type = "xlsx")
 public class User {
     /**
      * 用户id
