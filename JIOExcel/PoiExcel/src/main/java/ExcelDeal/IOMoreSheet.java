@@ -1,6 +1,7 @@
 package ExcelDeal;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -15,149 +16,135 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
- * 重新编写Excel导入导出，集成以前的SolveClass类
- * 直接在本类中集成实现,同时添加注解自定义导出
+ * 多个sheet文件处理
  * @author Bailibo
- * @time 21/12/30
+ * @time 22/1/4
  */
+public class IOMoreSheet {
+    /**
+     * sheet数
+     */
+    Integer sheetNum;
+    /**
+     * sheet名List
+     * 最大导入10个sheet
+     */
+    List<String> sheetName = new ArrayList(10);
+    /**
+     * 文件名
+     */
+    String fileName;
+    /**
+     * 文件地址
+     */
+    String fileAddr;
+    /**
+     * 类列表
+     */
+    List<Class> classList;
 
-public class IOExcel<T>{
-
-    /* Excel file name */
-    private String fileName;
-
-    //本地存放位置
-    private String localAddr = "C:\\Download";
-
-    //Excel 文件类型 .xls  .xlsx
-    private String type;
-
-    //最大处理行数
-    private Integer maxDealLine;
-
-    //数据对象类型
-    Class<T> clazz;
-
-    //日志
-    final Logger logger = LoggerFactory.getLogger(IOExcel.class);
+    /**
+     * 日志
+     */
+    final Logger ioallsheetlogger = LoggerFactory.getLogger(IOMoreSheet.class);
 
 
-    public IOExcel(Class<T> clazz){
-        this.clazz = clazz;
-    }
-
-    public IOExcel(Class<T> clazz,String fileName,String localAddr,String type){
-        this.clazz = clazz;
+    /**
+     * 导入使用构造函数
+     * @param fileName  文件名
+     * @param fileAddr 文件地址
+     */
+    public IOMoreSheet(String fileName,String fileAddr){
         this.fileName = fileName;
-        this.localAddr = localAddr;
-        this.type = type;
+        this.fileAddr = fileAddr;
     }
 
     /**
-     * 数据导出函数
-     * @param list 导出对象列表
-     * @return true 成功 | false 失败
+     * 多Sheet导入
+     * @param classes
+     * @return
      */
-    public Boolean outputExcel(List<T> list) {
+    public Map<String,List> inputAllSheet(Class... classes){
 
-        //列表为空直接退出
-        if(null == list){
+        Map<String,List> resultMap = new HashMap();
+
+        for (int i = 0; i < classes.length; i++) {
+            List list = inputExcel(i,classes[i]);
+            if(null == list){
+                ioallsheetlogger.error("inputExcel错误");
+                return null;
+            }
+            resultMap.put(sheetName.get(i),list);
+        }
+        if(null != resultMap){
+            return resultMap;
+        }
+        return null;
+    }
+
+    public boolean outputAllSheet(Map<String,List> map,String fileAddr){
+        this.fileAddr = fileAddr;
+        if(null == map){
             return false;
         }
 
-        //把List<T>转为 List<Object[]>
-        List<Object[]> dealList = new ArrayList<Object[]>(list.size());
-        Field[] declaredFields = clazz.getDeclaredFields();
-        for (int i = 0; i < list.size(); i++) {
-            Object[] objects = new Object[declaredFields.length];
-            for (int j = 0; j < declaredFields.length; j++) {
-                try {
-                    objects[j] = declaredFields[j].get(list.get(i));
-                } catch (IllegalAccessException e) {
-                    logger.error(String.valueOf(e));
+        XSSFWorkbook book = new XSSFWorkbook();
+        for(String sheetName:map.keySet()){
+            List list = map.get(sheetName);
+            List<Object[]> dealList = new ArrayList<>(list.size());
+            Field[] declaredFields = list.get(0).getClass().getDeclaredFields();
+            for (int i = 0; i < list.size(); i++) {
+                Object[] objects = new Object[declaredFields.length];
+                for (int j = 0; j < declaredFields.length; j++) {
+                    try {
+                        declaredFields[j].setAccessible(true);
+                        objects[j] = declaredFields[j].get(list.get(i));
+                    } catch (IllegalAccessException e) {
+                        ioallsheetlogger.error(String.valueOf(e));
+                    }
+                }
+                dealList.add(objects);
+            }
+
+            XSSFSheet sheet = book.createSheet(sheetName);
+            for (int row = 0; row < dealList.size(); row++) {
+                XSSFRow sheetRow = sheet.createRow(row);
+                for (int col = 0; col < dealList.get(0).length; col++) {
+                    sheetRow.createCell(col).setCellValue(String.valueOf(dealList.get(row)[col]));
                 }
             }
-            dealList.add(objects);
-        }
 
-        // Check whether annotation exist then edit address
-        if(clazz.isAnnotationPresent(OutExcel.class)){
-            //get annotion OutExcel
-            OutExcel outExcel = clazz.getAnnotation(OutExcel.class);
-            localAddr = outExcel.outAddr();
-            fileName = outExcel.fileName();
-            if("null".equals(fileName)){
-                fileName = null;
-            }
-        }
-
-        //Determine whether the data is empty
-        if(null == dealList || null == dealList.get(0)[0]){
-            logger.debug("数据为空，或数据格式不对");
-            return false;
-        }
-
-        //Create table structure and save data
-        XSSFWorkbook book = new XSSFWorkbook();
-        XSSFSheet sheet = book.createSheet("sheet1");
-        for (int row = 0; row < dealList.size(); row++) {
-            XSSFRow sheetRow = sheet.createRow(row);
-            for (int col = 0; col < dealList.get(0).length; col++) {
-                sheetRow.createCell(col).setCellValue(String.valueOf(dealList.get(row)[col]));
-            }
         }
 
         //写入文件
-        if(null == fileName){
-            //时间戳命名
-            Date date = new Date();
-            fileName = String.valueOf(date.getTime());
-        }
-        String addr  = localAddr + "\\"+fileName+".xlsx";
+        //时间戳命名
+        Date date = new Date();
+        fileName = String.valueOf(date.getTime());
+        String addr  = fileAddr + "\\"+fileName+".xlsx";
         try{
             book.write(new FileOutputStream(addr));
             book.close();
         }catch (Exception e){
             System.out.println(e);
         }
-
         return true;
-
     }
 
     /**
-     * 数据导入函数
-     * @param sheetNum sheet号
-     * @return 返回对象列表
+     * 单sheet导入
+     * @param sheetNum sheet编号 0开始
+     * @return 对象列表
      */
-    public List<T> inputExcel(int sheetNum) {
-        //判断是否使用了注解
-        if(clazz.isAnnotationPresent(InExcel.class)){
-            InExcel inExcel = clazz.getAnnotation(InExcel.class);
-            String addr = inExcel.fileAddr();
-            type = inExcel.type();
-            String sepline = "\\\\";
-            addr = addr.replaceAll(sepline,"/");
-            String[] str = addr.split("/");
-            fileName = str[str.length-1];
-            String str2 ="/"+fileName;
-            localAddr = addr.replace(str2,"");
-
-            System.out.println(addr);
-            System.out.println("fileName" +fileName+" type: "+type+" localdir: "+localAddr);
-        }
+    private List<Object> inputExcel(int sheetNum,Class clazz) {
 
         if(null == fileName){
             return null;
         }
-
         String addr;
-        addr = localAddr + "\\" +fileName+"."+type;
+        addr = fileAddr+"\\"+fileName;
 
         try{
             File excel = new File(addr);
@@ -171,17 +158,15 @@ public class IOExcel<T>{
                  */
 
                 if("xls".equals(split[1])){
-                    this.type = "xls";
                     FileInputStream fis = new FileInputStream(excel);
                     workBook = new HSSFWorkbook(fis);
                 }
 
                 else if("xlsx".equals(split[1])){
-                    this.type = "xlsx";
                     workBook = new XSSFWorkbook(excel);
                 }
                 else {
-                    logger.error("导入文件类型错误");
+                    ioallsheetlogger.error("导入文件类型错误");
                     return null;
                 }
 
@@ -190,6 +175,12 @@ public class IOExcel<T>{
                  */
 
                 Sheet sheet = workBook.getSheetAt(sheetNum);
+                if(null != sheet.getSheetName()){
+                    this.sheetName.add(sheet.getSheetName());
+                }
+                else {
+                    this.sheetName.add("undefine");
+                }
                 Row row = sheet.getRow(0);
                 if(row == null){
                     System.out.println("导入数据，Excel第一行不能为空");
@@ -211,23 +202,22 @@ public class IOExcel<T>{
                 }
 
                 //定义结果列表
-                List<T> resultList;
+                List<Object> resultList;
                 try{
-                    resultList = toCommon(list);
+                    resultList = toCommon(list,clazz);
                 }catch (Exception e){
-                    logger.error(String.valueOf(e));
+                    ioallsheetlogger.error(String.valueOf(e));
                     return null;
                 }
 
                 return resultList;
             }
         } catch (Exception e){
-            logger.error(String.valueOf(e));
+            ioallsheetlogger.error(String.valueOf(e));
             return null;
         }
         return null;
     }
-
 
     /***
      * 获取单元格数据
@@ -294,28 +284,32 @@ public class IOExcel<T>{
      * @param list 数据类型
      * @return 转换为有类型的数据
      */
-    private List<T> toCommon(List<Object[]> list) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    private List<Object> toCommon(List<Object[]> list,Class clazz) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
 
         //获取泛型类的属性
-        List<T> resultList = new ArrayList<T>(list.size());
+        List<Object> resultList = new ArrayList(list.size());
         Field[] fields = clazz.getDeclaredFields();
 
         //通过判断属性的类型进行强制类型转换
         for (int i = 0; i < list.size(); i++) {
-            T obj = clazz.newInstance();
+            Object obj = (Object) clazz.newInstance();
             for (int j = 0; j < list.get(i).length; j++) {
 
                 if (fields[j].getType() == Integer.class) {
                     Integer result = Integer.valueOf(String.valueOf(list.get(i)[j]));
+                    fields[j].setAccessible(true);
                     fields[j].set(obj, result);
                 } else if (fields[j].getType() == Double.class) {
                     Double result = (Double) list.get(i)[j];
+                    fields[j].setAccessible(true);
                     fields[j].set(obj, result);
                 } else if (fields[j].getType() == String.class) {
                     String result = (String) list.get(i)[j];
+                    fields[j].setAccessible(true);
                     fields[j].set(obj, result);
                 } else if (fields[j].getType() == Date.class) {
                     Date result = (Date) list.get(i)[j];
+                    fields[j].setAccessible(true);
                     fields[j].set(obj, result);
                 } else {
                     fields[j].set(obj, null);

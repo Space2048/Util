@@ -1,4 +1,7 @@
-package ExcelDeal;
+package ExcelDeal.Entity;
+
+import ExcelDeal.InExcel;
+import ExcelDeal.OutExcel;
 
 import java.util.Date;
 
