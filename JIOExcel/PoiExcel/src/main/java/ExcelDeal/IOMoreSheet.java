@@ -1,7 +1,6 @@
 package ExcelDeal;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -23,11 +22,7 @@ import java.util.*;
  * @author Bailibo
  * @time 22/1/4
  */
-public class IOMoreSheet {
-    /**
-     * sheet数
-     */
-    Integer sheetNum;
+public class IOMoreSheet implements ExcelInterface{
     /**
      * sheet名List
      * 最大导入10个sheet
@@ -64,9 +59,10 @@ public class IOMoreSheet {
 
     /**
      * 多Sheet导入
-     * @param classes
-     * @return
+     * @param classes 导入对象类型
+     * @return Sheet名对对象列表的HashMap
      */
+    @Override
     public Map<String,List> inputAllSheet(Class... classes){
 
         Map<String,List> resultMap = new HashMap();
@@ -79,13 +75,11 @@ public class IOMoreSheet {
             }
             resultMap.put(sheetName.get(i),list);
         }
-        if(null != resultMap){
-            return resultMap;
-        }
-        return null;
+        return resultMap;
     }
 
-    public boolean outputAllSheet(Map<String,List> map,String fileAddr){
+    @Override
+    public boolean outputAllSheet(Map<String,List> map, String fileAddr){
         this.fileAddr = fileAddr;
         if(null == map){
             return false;
@@ -96,12 +90,12 @@ public class IOMoreSheet {
             List list = map.get(sheetName);
             List<Object[]> dealList = new ArrayList<>(list.size());
             Field[] declaredFields = list.get(0).getClass().getDeclaredFields();
-            for (int i = 0; i < list.size(); i++) {
+            for (Object o : list) {
                 Object[] objects = new Object[declaredFields.length];
                 for (int j = 0; j < declaredFields.length; j++) {
                     try {
                         declaredFields[j].setAccessible(true);
-                        objects[j] = declaredFields[j].get(list.get(i));
+                        objects[j] = declaredFields[j].get(o);
                     } catch (IllegalAccessException e) {
                         ioallsheetlogger.error(String.valueOf(e));
                     }
@@ -152,11 +146,7 @@ public class IOMoreSheet {
             if(excel.isFile() && excel.exists()){
                 String[] split = excel.getName().split("\\.");
                 Workbook workBook;
-
-                /**判断文件类型
-                 *
-                 */
-
+//                判断文件类型
                 if("xls".equals(split[1])){
                     FileInputStream fis = new FileInputStream(excel);
                     workBook = new HSSFWorkbook(fis);
@@ -170,10 +160,7 @@ public class IOMoreSheet {
                     return null;
                 }
 
-                /**
-                 * 开始解析Excel
-                 */
-
+                //开始解析Excel
                 Sheet sheet = workBook.getSheetAt(sheetNum);
                 if(null != sheet.getSheetName()){
                     this.sheetName.add(sheet.getSheetName());
@@ -188,14 +175,13 @@ public class IOMoreSheet {
                 }
 
 
-                /**保存数据列表**/
-                List<Object[]> list = new ArrayList<Object[]>(sheet.getLastRowNum());
+                //保存数据列表
+                List<Object[]> list = new ArrayList<>(sheet.getLastRowNum());
 
                 for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                     Object[] objArray = new Object[row.getLastCellNum()];
                     row = sheet.getRow(i);
                     for (int j = 0; j < objArray.length; j++) {
-                        Cell cell = row.getCell(j);
                         objArray[j] =getCellValue(row,j);
                     }
                     list.add(objArray);
@@ -284,31 +270,31 @@ public class IOMoreSheet {
      * @param list 数据类型
      * @return 转换为有类型的数据
      */
-    private List<Object> toCommon(List<Object[]> list,Class clazz) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    private List<Object> toCommon(List<Object[]> list,Class clazz) throws IllegalAccessException, InstantiationException {
 
         //获取泛型类的属性
         List<Object> resultList = new ArrayList(list.size());
         Field[] fields = clazz.getDeclaredFields();
 
         //通过判断属性的类型进行强制类型转换
-        for (int i = 0; i < list.size(); i++) {
-            Object obj = (Object) clazz.newInstance();
-            for (int j = 0; j < list.get(i).length; j++) {
+        for (Object[] objects : list) {
+            Object obj = clazz.newInstance();
+            for (int j = 0; j < objects.length; j++) {
 
                 if (fields[j].getType() == Integer.class) {
-                    Integer result = Integer.valueOf(String.valueOf(list.get(i)[j]));
+                    Integer result = Integer.valueOf(String.valueOf(objects[j]));
                     fields[j].setAccessible(true);
                     fields[j].set(obj, result);
                 } else if (fields[j].getType() == Double.class) {
-                    Double result = (Double) list.get(i)[j];
+                    Double result = (Double) objects[j];
                     fields[j].setAccessible(true);
                     fields[j].set(obj, result);
                 } else if (fields[j].getType() == String.class) {
-                    String result = (String) list.get(i)[j];
+                    String result = (String) objects[j];
                     fields[j].setAccessible(true);
                     fields[j].set(obj, result);
                 } else if (fields[j].getType() == Date.class) {
-                    Date result = (Date) list.get(i)[j];
+                    Date result = (Date) objects[j];
                     fields[j].setAccessible(true);
                     fields[j].set(obj, result);
                 } else {

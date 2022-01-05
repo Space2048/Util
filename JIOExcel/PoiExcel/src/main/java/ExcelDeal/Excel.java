@@ -4,6 +4,7 @@ package ExcelDeal;
  * ExcelDeal.impl.Excel 类，保存Excel基本信息
  * 只支持 文件中有一个sheet
  */
+@Deprecated
 public class Excel {
     /**
      * ExcelDeal.impl.Excel 文件地址

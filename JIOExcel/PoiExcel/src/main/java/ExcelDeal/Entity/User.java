@@ -1,7 +1,7 @@
 package ExcelDeal.Entity;
 
-import ExcelDeal.InExcel;
-import ExcelDeal.OutExcel;
+import ExcelDeal.annotations.InExcel;
+import ExcelDeal.annotations.OutExcel;
 
 import java.util.Date;
 

@@ -1,5 +1,7 @@
 package ExcelDeal;
 
+import ExcelDeal.annotations.InExcel;
+import ExcelDeal.annotations.OutExcel;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -25,7 +27,7 @@ import java.util.List;
  * @author Bailibo
  * @time 21/12/30
  */
-
+@Deprecated
 public class IOExcel<T>{
 
     /* Excel file name */

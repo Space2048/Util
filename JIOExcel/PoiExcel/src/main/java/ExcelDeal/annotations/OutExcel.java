@@ -1,4 +1,4 @@
-package ExcelDeal;
+package ExcelDeal.annotations;
 
 import java.lang.annotation.*;
 
